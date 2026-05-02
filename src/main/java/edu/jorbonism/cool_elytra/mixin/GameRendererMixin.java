@@ -47,12 +47,10 @@ public abstract class GameRendererMixin {
 					double direction = Math.signum(velocity.x * facing.z - velocity.z * facing.x); // = which side laterally each vector is on
 					angle = Math.atan(Math.sqrt(horizontalSpeed2) * Math.acos(dot) * CoolElytraConfig.wingPower) * direction * CoolElytraClient.TODEG;
 				}
-				// smooth changes to the roll angle and remove the bumpy crunchy
-				angle += Math.pow(CoolElytraConfig.rollSmoothing, frameTime * 40) * (CoolElytraClient.rollAngle - angle);
-				CoolElytraClient.rollAngle = angle;
+				CoolElytraClient.rollAngle = smoothRollAngle(angle, frameTime);
 				
 			} else {
-				CoolElytraClient.rollAngle = 0.0f;
+				CoolElytraClient.rollAngle = smoothRollAngle(0, frameTime);
 			}
 			
 			CoolElytraClient.yawVelocity = 0;
@@ -90,7 +88,7 @@ public abstract class GameRendererMixin {
 				CoolElytraClient.rollAngle = angle;
 				
 			} else {
-				CoolElytraClient.rollAngle = 0;
+				CoolElytraClient.rollAngle = smoothRollAngle(0, frameTime);
 				CoolElytraClient.yawVelocity = 0;
 				CoolElytraClient.rollVelocity = 0;
 			}
@@ -100,6 +98,12 @@ public abstract class GameRendererMixin {
 			CoolElytraClient.yawVelocity = 0;
 			CoolElytraClient.rollVelocity = 0;
 		}
+	}
+
+	private double smoothRollAngle(double targetAngle, double frameTime) {
+		double smoothing = Math.pow(CoolElytraConfig.rollSmoothing, frameTime * 40);
+		double angle = targetAngle + smoothing * (CoolElytraClient.rollAngle - targetAngle);
+		return Math.abs(angle) < 0.01 ? 0 : angle;
 	}
 	
 	public Vec3 getPlayerInstantaneousVelocity(float tickDelta) {
